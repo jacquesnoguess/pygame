@@ -88,7 +88,7 @@ class Cloud(pygame.sprite.Sprite):
         self.rect.move_ip(-5, 0)
         if self.rect.right < 0:
             self.kill()
-
+            
 pygame.mixer.init()
 pygame.init()
 
@@ -115,7 +115,8 @@ all_sprites.add(player)
 clock = pygame.time.Clock()
 
 running = True
-
+new_bullet = Bullet(player.rect.right, player.rect.centery) 
+score = 0
 while running:
     for event in pygame.event.get():
         if event.type == KEYDOWN:
@@ -157,7 +158,10 @@ while running:
     if pygame.sprite.spritecollideany(player, enemies):
         player.kill()
         running = False
-    if pygame.sprite.spritecollideany(bullet, enemies):
+    if pygame.sprite.spritecollideany(new_bullet, enemies):
+        score +=1
+        new_enemy.kill()
+        
         
     pygame.display.flip()
 
