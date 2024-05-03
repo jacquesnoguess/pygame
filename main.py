@@ -1,5 +1,7 @@
 import pygame
 import random
+pygame.font.init()  
+my_font = pygame.font.SysFont('Elephant', 30)
 from pygame.locals import (
     RLEACCEL,
     K_UP,
@@ -14,7 +16,13 @@ from pygame.locals import (
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
-
+score = 0
+class Score(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Score, self).__init__()
+        text_surface = my_font.render('SCORE: '+str(score), False, (0, 0, 0))
+    def display_score(text_surface): 
+        screen.blit(text_surface, (0,0))
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super(Player, self).__init__()
@@ -44,7 +52,7 @@ class Player(pygame.sprite.Sprite):
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super(Bullet, self).__init__()
-        self.surf = pygame.Surface((10, 2))
+        self.surf = pygame.Surface((15, 3))
         self.surf.fill((255, 255, 237))
         self.rect = self.surf.get_rect(center=(x, y))
         self.speed = 10  # Adjust the bullet speed as needed
@@ -65,7 +73,7 @@ class Enemy(pygame.sprite.Sprite):
                 random.randint(0, SCREEN_HEIGHT),
             )
         )
-        self.speed = random.randint(5, 20)
+        self.speed = random.randint(5, 15)
 
     def update(self):
         self.rect.move_ip(-self.speed, 0)
@@ -89,16 +97,24 @@ class Cloud(pygame.sprite.Sprite):
         if self.rect.right < 0:
             self.kill()
             
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Explosion, self).__init__()
+        blast = pygame.image.load("explosion.png").convert()
+        blast.set_colorkey((0, 0, 0), RLEACCEL)
+    def explode(blast):
+        screen.blit(blast, (0, 0))
+
 pygame.mixer.init()
 pygame.init()
 
-pygame.mixer.music.load("Apoxode_-_Electric_1.mp3")
+pygame.mixer.music.load("minor synth.wav")
 pygame.mixer.music.play(loops=-1)
 
 move_up_sound = pygame.mixer.Sound("Rising_putter.ogg")
 move_down_sound = pygame.mixer.Sound("Falling_putter.ogg")
 collision_sound = pygame.mixer.Sound("Collision.ogg")
-
+victory_sound = pygame.mixer.Sound("victory.wav")
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 ADDENEMY = pygame.USEREVENT + 1
@@ -156,12 +172,25 @@ while running:
         screen.blit(entity.surf, entity.rect)
 
     if pygame.sprite.spritecollideany(player, enemies):
+        victory_sound.play
         player.kill()
         running = False
-    if pygame.sprite.spritecollideany(new_bullet, enemies):
-        score +=1
-        new_enemy.kill()
+    
+    for bullet in all_sprites:
+        if isinstance(bullet, Bullet):
+            enemies_hit = pygame.sprite.spritecollide(bullet, enemies, True)
+            if enemies_hit:
+                collision_sound.play()
+                blast = pygame.image.load("explosion.png").convert()
+                blast.set_colorkey((0, 0, 0), RLEACCEL)
+                Explosion.explode(blast) 
+                score += 1
+                bullet.kill() 
         
+    text_surface = my_font.render('SCORE: '+str(score), False, (0, 0, 0))
+    Score.display_score(text_surface)
+    
+    
         
     pygame.display.flip()
 
